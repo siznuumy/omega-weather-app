@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Omega Weather</string>
+    <string name="feels_like">feels like</string>
+    <string name="humidity">humidity</string>
+    <string name="w_speed">wind speed</string>
+    <string name="url_lang">en</string>
+    <string name="min">min.</string>
+    <string name="max">max.</string>
+    <string name="saint_p">Saint-Petersburg</string>
+    <string name="msk">Moscow</string>
+</resources>

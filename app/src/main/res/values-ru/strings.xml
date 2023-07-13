@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Omega Weather</string>
+    <string name="feels_like">ощущается как</string>
+    <string name="humidity">видимость</string>
+    <string name="w_speed">ск. ветра</string>
+    <string name="url_lang">ru</string>
+    <string name="min">мин.</string>
+    <string name="max">макс.</string>
+    <string name="saint_p">Санкт-Петербург</string>
+    <string name="msk">Москва</string>
+</resources>
