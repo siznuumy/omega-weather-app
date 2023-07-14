@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,11 +32,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImagePainter
+import com.example.weather_app_omega.ui.theme.DarkBlueBg
 import com.example.weather_app_omega.ui.theme.LightBlueBg
 import com.example.weather_app_omega.ui.theme.Weather_app_omegaTheme
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
+private var coldStart = true
 class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -42,16 +47,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Weather_app_omegaTheme {
-                val state = rememberScrollState()
-                LaunchedEffect(Unit) { state.animateScrollTo(0) }
+//                val state = rememberScrollState()
+//                LaunchedEffect(Unit) { state.animateScrollTo(0) }
                 val daysList = remember {
                     mutableStateOf(listOf<WeatherData>())
                 }
                 val currentDay = remember {
                     mutableStateOf(
                         WeatherData(
-                        "",
-                        "",
+                        "loc",
+                        "date",
                         "0.0",
                         "",
                         "",
@@ -68,6 +73,10 @@ class MainActivity : ComponentActivity() {
                 val viewModel = viewModel<GetWeatherModel>()
                 val isLoading by viewModel.isLoading.collectAsState()
                 val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isLoading)
+                var bgColor = LightBlueBg
+                if (isSystemInDarkTheme()) { bgColor = DarkBlueBg }
+
+                viewModel.getData("Saint-Petersburg", this, daysList, currentDay)
 
                 SwipeRefresh(
                     state = swipeRefreshState,
@@ -77,17 +86,19 @@ class MainActivity : ComponentActivity() {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(LightBlueBg)
+                            .background(bgColor)
                     ) {
                         item {
                             topLayout(currentDay = currentDay)
-                            TESTmidLayout()
+                            TESTmidLayout(currentDay)
 //                        DaysLayout()
                         }
-
-                        items(3) {
-                            ListItem()
+                        itemsIndexed(daysList.value) {
+                            _, item -> ListItem(item)
                         }
+//                        items(3) {
+//                            ListItem(daysList)
+//                        }
 
                     }
                 }

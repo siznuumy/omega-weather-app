@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Omega Weather</string>
+    <string name="app_name">O.Weather</string>
     <string name="feels_like">feels like</string>
     <string name="humidity">humidity</string>
     <string name="w_speed">wind speed</string>
@@ -8,4 +8,6 @@
     <string name="max">max.</string>
     <string name="saint_p">Saint-Petersburg</string>
     <string name="msk">Moscow</string>
+    <string name="last_upd">last update</string>
+    <string name="m_sec">m/s</string>
 </resources>

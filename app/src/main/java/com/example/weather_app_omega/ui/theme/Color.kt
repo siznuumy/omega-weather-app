@@ -12,10 +12,16 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 val LightBlueBg = Brush.verticalGradient(
-    listOf(Color(0xFF91F3FF), Color(0xFF36C0FF)),
+    listOf(Color(0xFF91E0FF), Color(0xFF2C94C4)),
     startY = 0.0f,
-    endY = 100.0f
+    endY = 450.0f
 )
 
-val LightBlue = Color(0xFF91F3FF)
-val DarkGreyBg = Color(0x46486379)
+val DarkBlueBg = Brush.verticalGradient(
+    listOf(Color(0xFF307CA0), Color(0xFF112D3A)),
+    startY = 0.0f,
+    endY = 450.0f
+)
+
+val LightBlue = Color(0x4600B7FF)
+val DarkBlue = Color(0x3E5087B4)
