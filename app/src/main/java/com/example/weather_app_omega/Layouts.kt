@@ -1,6 +1,10 @@
 package com.example.weather_app_omega
 
+import android.text.style.UnderlineSpan
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +22,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +46,7 @@ import com.example.weather_app_omega.ui.theme.LightBlue
 import com.example.weather_app_omega.ui.theme.Weather_app_omegaTheme
 import okhttp3.internal.wait
 import okio.ByteString.Companion.encodeUtf8
+import kotlin.coroutines.coroutineContext
 
 //@Preview(showBackground = true)
 @Composable
@@ -130,33 +137,20 @@ fun TESTmidLayout(currentDay: MutableState<WeatherData>) {
 @Composable
 fun topLayout(currentDay: MutableState<WeatherData>) {
 
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
+    Row(
+        modifier = Modifier.padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Text(
-            text = stringResource(id = R.string.last_upd) + ": " + currentDay.value.date,
+            text = stringResource(id = R.string.last_upd) + ": " + currentDay.value.last_update,
             style = MaterialTheme.typography.labelMedium,
             color = Color.White
         )
-        Spacer(modifier = Modifier.size(4.dp))
-
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DaysLayout(){
-    Box(modifier = Modifier
-        .wrapContentSize()
-        .clip(RoundedCornerShape(10.dp))) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-        ) {
-//            items(10) { ListItem() }
-        }
+        Text(
+            modifier = Modifier.clickable { /*TODO: dialog window with list of cities*/ },
+            text = stringResource(id = R.string.change_country),
+            color = Color.White
+        )
     }
 }
 
@@ -167,7 +161,6 @@ fun ListItem(item: WeatherData) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 15.dp, vertical = 4.dp),
-//        elevation = CardElevation(10.dp),
         shape = RoundedCornerShape(15.dp),
 
     ) {
@@ -220,9 +213,4 @@ fun ListItem(item: WeatherData) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun infoLayout() {
-
-}
 

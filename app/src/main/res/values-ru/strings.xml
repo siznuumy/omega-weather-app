@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">O.Weather</string>
     <string name="feels_like">ощущается как</string>
-    <string name="humidity">видимость</string>
+    <string name="humidity">влажность</string>
     <string name="w_speed">ск. ветра</string>
     <string name="url_lang">ru</string>
     <string name="min">мин.</string>
@@ -11,4 +11,6 @@
     <string name="msk">Москва</string>
     <string name="last_upd">обновлено</string>
     <string name="m_sec">м/с</string>
+    <string name="change_country">сменить город</string>
+    <string name="tomorrow">Завтра</string>
 </resources>
