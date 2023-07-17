@@ -15,10 +15,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -30,17 +32,25 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import okhttp3.internal.wait
 
 
 private lateinit var locLauncher: FusedLocationProviderClient
 private var _lat = mutableStateOf("")
 private var _lon = mutableStateOf("")
+var loloc = false
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             Weather_app_omegaTheme {
+                locLauncher = LocationServices.getFusedLocationProviderClient(this)
                 val daysList = remember {
                     mutableStateOf(listOf<WeatherData>())
                 }
@@ -61,18 +71,22 @@ class MainActivity : ComponentActivity() {
                         )
                     )
                 }
+                val locUploaded = remember {
+                    mutableStateOf(loloc)
+                }
 
                 val viewModel = viewModel<GetWeatherModel>()
-                locLauncher = LocationServices.getFusedLocationProviderClient(this)
                 val isLoading by viewModel.isLoading.collectAsState()
                 val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isLoading)
+
                 var bgColor = LightBlueBg
                 if (isSystemInDarkTheme()) { bgColor = DarkBlueBg }
 
-                LaunchedEffect(key1 = true) {
-                    getLocation()
+                getLocation(locUploaded)
+                LaunchedEffect(_lat.value, _lon.value) {
                     viewModel.getData((_lat.value+","+_lon.value), applicationContext, daysList, currentDay)
                 }
+
                 SwipeRefresh(
                     state = swipeRefreshState,
                     onRefresh = {
@@ -86,6 +100,7 @@ class MainActivity : ComponentActivity() {
                         item {
                             topLayout(currentDay = currentDay)
                             TESTmidLayout(currentDay)
+                            dopLayout()
                         }
                         itemsIndexed(daysList.value) {
                             _, item -> ListItem(item)
@@ -97,7 +112,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun getLocation() {
+    private fun getLocation(locUploaded: MutableState<Boolean>) {
         if (ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_COARSE_LOCATION
@@ -107,12 +122,31 @@ class MainActivity : ComponentActivity() {
         }
 
         val location = locLauncher.lastLocation
-        location.addOnSuccessListener {
+        location.addOnSuccessListener() {
             if (it != null) {
                 _lat.value = it.latitude.toString()
                 _lon.value = it.longitude.toString()
+                loloc = true
                 Log.d("permissions", "lat=${it.latitude}, lon=${it.longitude}")
             }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+    fun checkPermission() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED) {
+            Log.d("permissions", "perm not granted")
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, ),100)
         }
     }
 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -73,7 +77,7 @@ fun TESTmidLayout(currentDay: MutableState<WeatherData>) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "13:32",
+                        text = stringResource(id = R.string.last_upd) + ": " + currentDay.value.last_update,
                         modifier = Modifier.padding(
                             top = 8.dp,
                             start = 8.dp
@@ -141,11 +145,7 @@ fun topLayout(currentDay: MutableState<WeatherData>) {
         modifier = Modifier.padding(16.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        Text(
-            text = stringResource(id = R.string.last_upd) + ": " + currentDay.value.last_update,
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.White
-        )
+
         Text(
             modifier = Modifier.clickable { /*TODO: dialog window with list of cities*/ },
             text = stringResource(id = R.string.change_country),
@@ -208,6 +208,31 @@ fun ListItem(item: WeatherData) {
                     color = Color.White,
                     style = TextStyle(fontSize = 25.sp)
                 )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun dopLayout() {
+    LazyRow(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        item {
+            Card(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(4.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(text = stringResource(id = R.string.humidity))
+            }
+            Card(modifier = Modifier
+                .wrapContentSize()
+                .padding(4.dp),
+                shape = MaterialTheme.shapes.small) {
+                Text(text = stringResource(id = R.string.w_speed))
             }
         }
     }

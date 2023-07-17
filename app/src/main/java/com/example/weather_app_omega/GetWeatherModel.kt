@@ -1,6 +1,9 @@
 package com.example.weather_app_omega
 
+import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.content.res.loader.ResourcesLoader
 import android.content.res.loader.ResourcesProvider
@@ -10,14 +13,19 @@ import android.util.Log
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.weather_app_omega.ui.theme.LightBlue
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -35,12 +43,13 @@ import java.util.Locale
 import kotlin.coroutines.coroutineContext
 
 private const val API_KEY = "ac0b593ebf6a4043a48131058230407"
-
+private var _lat = ""
+private var _lon = ""
 class GetWeatherModel: ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
-    fun getData(city: String, context: Context,
+    fun getData(city: String?, context: Context,
                 daysList: MutableState<List<WeatherData>>,
                 currentDay: MutableState<WeatherData>
     ){
@@ -52,6 +61,7 @@ class GetWeatherModel: ViewModel() {
                 "&alerts=no" +
                 "&tides=no" +
                 "&hour=10"
+
         val queue = Volley.newRequestQueue(context)
         viewModelScope.launch {
             _isLoading.value = true
