@@ -12,4 +12,6 @@
     <string name="m_sec">m/s</string>
     <string name="change_country">change country</string>
     <string name="tomorrow">Tomorrow</string>
+    <string name="permission">Permission</string>
+    <string name="permission_info">We need this permission to get your permission to show the weather in your current location</string>
 </resources>
