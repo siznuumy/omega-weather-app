@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -15,11 +16,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +37,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.weather_app_omega.ui.theme.DarkBlue
 import com.example.weather_app_omega.ui.theme.DarkBlueBg
+import com.example.weather_app_omega.ui.theme.LightBlue
 import com.example.weather_app_omega.ui.theme.LightBlueBg
 import com.example.weather_app_omega.ui.theme.Weather_app_omegaTheme
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -49,9 +56,9 @@ import com.google.android.gms.tasks.CancellationTokenSource
 
 
 private lateinit var locLauncher: FusedLocationProviderClient
-private var _lat = mutableStateOf("")
-private var _lon = mutableStateOf("")
-
+private var _lat = mutableStateOf("60.000")
+private var _lon = mutableStateOf("30.000")
+private lateinit var locationPermissionResultLauncher: ActivityResultLauncher<String>
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,7 +87,12 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
+                val scrollState = rememberScrollState()
+
                 val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+                val ffd = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+
+//                ffd.isActiveNetworkMetered(IN)
 
                 val viewModel = viewModel<GetWeatherModel>()
                 val dialogQueue = viewModel.visiblePermissionDialogQueue
@@ -88,27 +100,29 @@ class MainActivity : ComponentActivity() {
                 val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isLoading)
 
                 var bgColor = LightBlueBg
+                var bgColor2 = LightBlue
                 if (isSystemInDarkTheme()) {
                     bgColor = DarkBlueBg
+                    bgColor2 = DarkBlue
                 }
 
-                val locationPermissionResultLauncher = rememberLauncherForActivityResult(
+                locationPermissionResultLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission(),
                     onResult = {
                         viewModel.onPermissionResult(
                             permission = Manifest.permission.ACCESS_COARSE_LOCATION,
                             isGranted = it
                         )
-                        getLocation()
-                        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                            Toast.makeText(this, this.getString(R.string.gps_provider), Toast.LENGTH_LONG).show()
+                        if (viewModel.checkGPS(applicationContext)) {
+                            getLocation()
                         }
                     }
                 )
 
                 LaunchedEffect(_lat.value, _lon.value) {
-                    getPermission(locationPermissionResultLauncher)
-
+                    if (viewModel.checkGPS(applicationContext)) {
+                        getLocation()
+                    }
                     viewModel.getData(
                         (_lat.value + "," + _lon.value),
                         applicationContext,
@@ -119,7 +133,9 @@ class MainActivity : ComponentActivity() {
                 SwipeRefresh(
                     state = swipeRefreshState,
                     onRefresh = {
-                        getLocation()
+                        if (viewModel.checkGPS(applicationContext)) {
+                            getLocation()
+                        }
                         viewModel.getData(
                             (_lat.value + "," + _lon.value),
                             this,
@@ -129,16 +145,17 @@ class MainActivity : ComponentActivity() {
                     }) {
                     LazyColumn(
                         modifier = Modifier
-                            .fillMaxSize()
                             .background(bgColor)
+                            .fillMaxSize()
+//                            .scrollable(state = scrollState, orientation = Orientation.Vertical)
                     ) {
                         item {
-                            topLayout(currentDay = currentDay)
-                            TESTmidLayout(currentDay)
-                            dopLayout()
+                            topLayout(currentDay = currentDay, bgColor2)
+                            TESTmidLayout(currentDay, bgColor2)
+                            dopLayout(currentDay, bgColor2)
                         }
                         itemsIndexed(daysList.value) { _, item ->
-                            ListItem(item)
+                            ListItem(item, applicationContext, bgColor2)
                         }
                     }
                 }
@@ -160,9 +177,9 @@ class MainActivity : ComponentActivity() {
                             onDismiss = { openAppSettings() },
                             onOkClick = {
                                 viewModel.dismissDialog()
-                                locationPermissionResultLauncher.launch(
-                                    Manifest.permission.ACCESS_COARSE_LOCATION
-                                )
+//                                locationPermissionResultLauncher.launch(
+//                                    Manifest.permission.ACCESS_COARSE_LOCATION
+//                                )
                             },
                             onGoToAppSettingsClick = { openAppSettings() }
                         )
@@ -198,7 +215,7 @@ class MainActivity : ComponentActivity() {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             Log.d("location", "no permission")
-            return
+            getPermission()
         }
 
 //        checkGPS()
@@ -212,8 +229,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 try {
                     Log.d("location", "received null")
-                    val location =
-                        locLauncher.getCurrentLocation(Priority.PRIORITY_LOW_POWER, cts_token)
+                    val location = locLauncher.lastLocation
                     location.addOnSuccessListener { locRes ->
                         if (locRes != null) {
                             _lat.value = locRes.latitude.toString()
@@ -229,7 +245,7 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    fun getPermission(locationPermissionResultLauncher: ActivityResultLauncher<String>) {
+    fun getPermission() {
         when {
             ContextCompat.checkSelfPermission(
                 this,
@@ -238,15 +254,7 @@ class MainActivity : ComponentActivity() {
                 // You can use the API that requires the permission.
                 Log.d("permission", "perm granted")
                 getLocation()
-            }
-            shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION) -> {
-            // In an educational UI, explain to the user why your app requires this
-            // permission for a specific feature to behave as expected, and what
-            // features are disabled if it's declined. In this UI, include a
-            // "cancel" or "no thanks" button that lets the user continue
-            // using your app without granting the permission.
-            }
-            else -> {
+            } else -> {
                 // You can directly ask for the permission.
                 // The registered ActivityResultCallback gets the result of this request.
                 Log.d("permission", "perm not granted")

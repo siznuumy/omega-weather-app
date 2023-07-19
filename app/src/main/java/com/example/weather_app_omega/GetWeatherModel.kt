@@ -1,52 +1,34 @@
 package com.example.weather_app_omega
 
-import android.Manifest
-import android.app.Activity
 import android.content.Context
-import android.content.pm.PackageManager
-import android.content.res.Resources
-import android.content.res.loader.ResourcesLoader
-import android.content.res.loader.ResourcesProvider
-import android.icu.text.UnicodeFilter
-import android.icu.text.UnicodeSet
+import android.content.Context.LOCATION_SERVICE
+import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.util.Log
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
+import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.example.weather_app_omega.ui.theme.LightBlue
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import okio.ByteString.Companion.decodeBase64
-import okio.ByteString.Companion.encode
-import okio.ByteString.Companion.encodeUtf8
-import okio.utf8Size
 import org.json.JSONObject
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.TextStyle
 import java.util.Locale
-import kotlin.coroutines.coroutineContext
+
 
 private const val API_KEY = "ac0b593ebf6a4043a48131058230407"
-private var _lat = ""
-private var _lon = ""
+
 class GetWeatherModel: ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -66,6 +48,41 @@ class GetWeatherModel: ViewModel() {
         }
     }
 
+    private fun errorHappen(context: Context) {
+        Toast.makeText(context, context.getString(R.string.smth_wrong), Toast.LENGTH_LONG).show()
+    }
+
+    fun checkGPS(context: Context): Boolean {
+        val locationManager = context.getSystemService(LOCATION_SERVICE) as LocationManager
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Toast.makeText(context, context.getString(R.string.gps_provider), Toast.LENGTH_LONG).show()
+            return false
+        } else {
+            return true
+        }
+    }
+    private fun isOnline(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (connectivityManager != null) {
+            val capabilities =
+                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            if (capabilities != null) {
+                if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
+                    return true
+                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
+                    return true
+                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     fun getData(city: String?, context: Context,
                 daysList: MutableState<List<WeatherData>>,
                 currentDay: MutableState<WeatherData>
@@ -80,6 +97,10 @@ class GetWeatherModel: ViewModel() {
                 "&hour=10"
 
         val queue = Volley.newRequestQueue(context)
+        if (!isOnline(context)) {
+            Toast.makeText(context, context.getString(R.string.internet), Toast.LENGTH_LONG).show()
+            return
+        }
         viewModelScope.launch(start = CoroutineStart.DEFAULT) {
             _isLoading.value = true
             Log.d("MyLog", "start of JSON loading")
@@ -93,7 +114,7 @@ class GetWeatherModel: ViewModel() {
                     Log.d("MyLog", "JSON loaded successfully")
                 },
                 {
-                    Log.d("MyLog", "VolleyError: $it")
+                    errorHappen(context)
                 }
             )
             queue.add(sRequest)

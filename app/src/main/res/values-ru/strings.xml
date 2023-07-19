@@ -14,7 +14,11 @@
     <string name="change_country">сменить город</string>
     <string name="tomorrow">Завтра</string>
     <string name="permission">Разрешение</string>
-    <string name="permission_perm_declined">Похоже вы второй раз отклонили разрешение. Вы можете перейти в Настройки приложения и дать разрешение в ручную, иначе будет показана погода только для Санкт-Петербурга.</string>
+    <string name="permission_perm_declined">Похоже, вы второй раз отклонили разрешение. Вы можете перейти в Настройки приложения и дать разрешение вручную, иначе будет показана погода только для Санкт-Петербурга.</string>
     <string name="permission_declined">Для корректной работы данного приложения необходимо ваше разрешение, чтобы можно было показывать погоду для вашего текущего местоположения.</string>
-    <string name="gps_provider">Похоже у Вас выключен GPS. Включите его.</string>
+    <string name="gps_provider">Похоже, у Вас выключен GPS. Включите его.</string>
+    <string name="smth_wrong">Что-то пошло не так с APi...</string>
+    <string name="internet">Включите интернет!</string>
+    <string name="permission_info">Нам нужно это разрешение, чтобы показывать погоду в вашем конкретном местоположении</string>
+    <string name="grant_permission">Дать разрешение</string>
 </resources>

@@ -16,10 +16,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.weather_app_omega.ui.theme.LightBlue
+import com.example.weather_app_omega.ui.theme.Weather_app_omegaTheme
 
 
 @Composable
@@ -32,7 +35,9 @@ fun PermissionDialog(
     onGoToAppSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier = Modifier.fillMaxSize()) {
+    Surface(
+        modifier = Modifier.fillMaxSize()
+    ) {
         AlertDialog(
             onDismissRequest = onDismiss,
             confirmButton = {
@@ -42,7 +47,7 @@ fun PermissionDialog(
                     Divider()
                     Text(
                         text = if (isPermanentlyDeclined) {
-                            "Grant permission"
+                            stringResource(id = R.string.grant_permission)
                         } else {
                             "OK"
                         },
