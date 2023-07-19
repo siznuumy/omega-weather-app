@@ -1,5 +1,4 @@
 # omega-weather-app
-A repository for tracking the status of the accomplish of a practicum assignment.
 
 ## Описание проекта
 
@@ -7,7 +6,7 @@ A repository for tracking the status of the accomplish of a practicum assignment
 
 ## Общие требования
 
-1. Приложение должно обращаться к API для получения данных о погоде. Можно воспользоваться OpenWeather (https://openweathermap.org/) или найти другой сервис.
+1. Приложение должно обращаться к API для получения данных о погоде. В моем случае я использовал ([WeatherApi.com/](https://www.weatherapi.com)).
 2. Придумать название приложению. Оно должно отображаться в Toolbar внутри приложения и в списке приложений Android.
 3. Поменять иконку приложения в списке приложений.
 4. Приложение должно работать быстро и стабильно. Приложение должно выдерживать смену конфигурации (смена языка, поворот экрана, смена темы) и не вылетать.
