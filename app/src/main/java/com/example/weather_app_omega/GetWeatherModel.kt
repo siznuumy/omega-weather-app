@@ -27,6 +27,7 @@ import com.android.volley.toolbox.Volley
 import com.example.weather_app_omega.ui.theme.LightBlue
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -79,7 +80,7 @@ class GetWeatherModel: ViewModel() {
                 "&hour=10"
 
         val queue = Volley.newRequestQueue(context)
-        viewModelScope.launch {
+        viewModelScope.launch(start = CoroutineStart.DEFAULT) {
             _isLoading.value = true
             Log.d("MyLog", "start of JSON loading")
             val sRequest = StringRequest(

@@ -1,20 +1,26 @@
 package com.example.weather_app_omega
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,14 +42,15 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 
+
 // TODO: Добавить тулбар с названием приложения
 //  и окно объяснения зачем вообще нужен пермишен; + облагородить две доп. карточки
 
 
 
 private lateinit var locLauncher: FusedLocationProviderClient
-private var _lat = mutableStateOf("59.931")
-private var _lon = mutableStateOf("31.311")
+private var _lat = mutableStateOf("")
+private var _lon = mutableStateOf("")
 
 class MainActivity : ComponentActivity() {
 
@@ -73,8 +80,10 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
+                val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+
                 val viewModel = viewModel<GetWeatherModel>()
-//                val dialogQueue = viewModel.visiblePermissionDialogQueue
+                val dialogQueue = viewModel.visiblePermissionDialogQueue
                 val isLoading by viewModel.isLoading.collectAsState()
                 val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isLoading)
 
@@ -83,9 +92,22 @@ class MainActivity : ComponentActivity() {
                     bgColor = DarkBlueBg
                 }
 
-                LaunchedEffect(_lat.value, _lon.value) {
+                val locationPermissionResultLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                    onResult = {
+                        viewModel.onPermissionResult(
+                            permission = Manifest.permission.ACCESS_COARSE_LOCATION,
+                            isGranted = it
+                        )
+                        getLocation()
+                        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                            Toast.makeText(this, this.getString(R.string.gps_provider), Toast.LENGTH_LONG).show()
+                        }
+                    }
+                )
 
-                    getLoc2(requestPermissionLauncher)
+                LaunchedEffect(_lat.value, _lon.value) {
+                    getPermission(locationPermissionResultLauncher)
 
                     viewModel.getData(
                         (_lat.value + "," + _lon.value),
@@ -121,73 +143,93 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                dialogQueue
+                    .reversed()
+                    .forEach { permission ->
+                        PermissionDialog(
+                            permissionTextProvider = when (permission) {
+                                Manifest.permission.ACCESS_COARSE_LOCATION -> {
+                                    LocationPermissionTextProvider()
+                                }
+                                else -> return@forEach
+                            },
+                            isPermanentlyDeclined = !shouldShowRequestPermissionRationale(
+                                permission
+                            ),
+                            context = applicationContext,
+                            onDismiss = { openAppSettings() },
+                            onOkClick = {
+                                viewModel.dismissDialog()
+                                locationPermissionResultLauncher.launch(
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            },
+                            onGoToAppSettingsClick = { openAppSettings() }
+                        )
+                    }
 
             }
         }
     }
 
-    private var requestPermissionLauncher =
-    registerForActivityResult(
-    ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            Log.d("perm launcher", "perm granted")
-            getLocation()
-        } else {
-            Log.d("perm launcher", "perm not granted")
-            TODO("добавить окно объяснения")
-            // Explain to the user that the feature is unavailable because the
-            // feature requires a permission that the user has denied. At the
-            // same time, respect the user's decision. Don't link to system
-            // settings in an effort to convince the user to change their
-            // decision.
-        }
+    fun Activity.openAppSettings() {
+        Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", packageName, null)
+        ).also(::startActivity)
     }
 
     @Composable
-    fun PermDio() {
-        AlertDialog(
-            onDismissRequest = {  },
-            confirmButton = {
-                getLocation()
-            },
-            title = {
-                stringResource(id = R.string.permission)
-            },
-            text = {
-                stringResource(id = R.string.permission_info)
-            },
-            modifier = Modifier.wrapContentHeight()
-        )
+    fun checkGPS() {
+//        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+//            Toast.makeText(this, stringResource(id = R.string.gps_provider), Toast.LENGTH_SHORT).show()
+//        }
     }
-//    @Composable
+
     private fun getLocation() {
-        val cts = CancellationTokenSource()
+        val cts_token = CancellationTokenSource().token
 
-    if (ActivityCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) != PackageManager.PERMISSION_GRANTED
-    ) { return }
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d("location", "no permission")
+            return
+        }
 
-        val location = locLauncher.getCurrentLocation(Priority.PRIORITY_LOW_POWER, cts.token)
+//        checkGPS()
+
+        val location = locLauncher.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts_token)
         location.addOnSuccessListener { locRes ->
             if (locRes != null) {
                 _lat.value = locRes.latitude.toString()
                 _lon.value = locRes.longitude.toString()
                 Log.d("location", "lat=${locRes.latitude}, lon=${locRes.longitude}")
             } else {
-                Log.d("location", "received null")
+                try {
+                    Log.d("location", "received null")
+                    val location =
+                        locLauncher.getCurrentLocation(Priority.PRIORITY_LOW_POWER, cts_token)
+                    location.addOnSuccessListener { locRes ->
+                        if (locRes != null) {
+                            _lat.value = locRes.latitude.toString()
+                            _lon.value = locRes.longitude.toString()
+                            Log.d("location", "lat=${locRes.latitude}, lon=${locRes.longitude}")
+                        }
+                    }
+                } catch (_: Exception) {
+
+                }
             }
         }
     }
 
 
-
-    fun getLoc2(requestPermissionLauncher: ActivityResultLauncher<String>) {
+    fun getPermission(locationPermissionResultLauncher: ActivityResultLauncher<String>) {
         when {
             ContextCompat.checkSelfPermission(
                 this,
@@ -203,13 +245,12 @@ class MainActivity : ComponentActivity() {
             // features are disabled if it's declined. In this UI, include a
             // "cancel" or "no thanks" button that lets the user continue
             // using your app without granting the permission.
-//                showInContextUI(...)
             }
             else -> {
                 // You can directly ask for the permission.
                 // The registered ActivityResultCallback gets the result of this request.
                 Log.d("permission", "perm not granted")
-                requestPermissionLauncher.launch(
+                locationPermissionResultLauncher.launch(
                     Manifest.permission.ACCESS_COARSE_LOCATION)
             }
         }

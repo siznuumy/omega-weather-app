@@ -14,4 +14,7 @@
     <string name="tomorrow">Tomorrow</string>
     <string name="permission">Permission</string>
     <string name="permission_info">We need this permission to get your permission to show the weather in your current location</string>
+    <string name="permission_perm_declined">It seems you permanently declined location permission. You can go to the app settings to grant it.</string>
+    <string name="permission_declined">This app needs access to your location so that we can show the weather in your current location.</string>
+    <string name="gps_provider">It seems like GPS is disabled. Enable it, please.</string>
 </resources>
