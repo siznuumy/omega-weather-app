@@ -50,14 +50,9 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 
 
-// TODO: Добавить тулбар с названием приложения
-//  и окно объяснения зачем вообще нужен пермишен; + облагородить две доп. карточки
-
-
-
 private lateinit var locLauncher: FusedLocationProviderClient
-private var _lat = mutableStateOf("60.000")
-private var _lon = mutableStateOf("30.000")
+private var _lat = mutableStateOf("")
+private var _lon = mutableStateOf("")
 private lateinit var locationPermissionResultLauncher: ActivityResultLauncher<String>
 class MainActivity : ComponentActivity() {
 
@@ -87,13 +82,6 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                val scrollState = rememberScrollState()
-
-                val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-                val ffd = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-
-//                ffd.isActiveNetworkMetered(IN)
-
                 val viewModel = viewModel<GetWeatherModel>()
                 val dialogQueue = viewModel.visiblePermissionDialogQueue
                 val isLoading by viewModel.isLoading.collectAsState()
@@ -108,12 +96,12 @@ class MainActivity : ComponentActivity() {
 
                 locationPermissionResultLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission(),
-                    onResult = {
+                    onResult = { granted ->
                         viewModel.onPermissionResult(
                             permission = Manifest.permission.ACCESS_COARSE_LOCATION,
-                            isGranted = it
+                            isGranted = granted
                         )
-                        if (viewModel.checkGPS(applicationContext)) {
+                        if (viewModel.checkGPS(applicationContext) && granted) {
                             getLocation()
                         }
                     }
@@ -147,10 +135,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .background(bgColor)
                             .fillMaxSize()
-//                            .scrollable(state = scrollState, orientation = Orientation.Vertical)
                     ) {
                         item {
-                            topLayout(currentDay = currentDay, bgColor2)
+                            topLayout(currentDay)
                             TESTmidLayout(currentDay, bgColor2)
                             dopLayout(currentDay, bgColor2)
                         }
@@ -174,14 +161,22 @@ class MainActivity : ComponentActivity() {
                                 permission
                             ),
                             context = applicationContext,
-                            onDismiss = { openAppSettings() },
+                            onDismiss = {
+                                viewModel.dismissDialog()
+                                locationPermissionResultLauncher.launch(
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            },
                             onOkClick = {
                                 viewModel.dismissDialog()
-//                                locationPermissionResultLauncher.launch(
-//                                    Manifest.permission.ACCESS_COARSE_LOCATION
-//                                )
+                                locationPermissionResultLauncher.launch(
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
                             },
-                            onGoToAppSettingsClick = { openAppSettings() }
+                            onGoToAppSettingsClick = {
+                                openAppSettings()
+                                viewModel.dismissDialog()
+                            }
                         )
                     }
 
@@ -194,13 +189,6 @@ class MainActivity : ComponentActivity() {
             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
             Uri.fromParts("package", packageName, null)
         ).also(::startActivity)
-    }
-
-    @Composable
-    fun checkGPS() {
-//        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-//            Toast.makeText(this, stringResource(id = R.string.gps_provider), Toast.LENGTH_SHORT).show()
-//        }
     }
 
     private fun getLocation() {
@@ -217,8 +205,6 @@ class MainActivity : ComponentActivity() {
             Log.d("location", "no permission")
             getPermission()
         }
-
-//        checkGPS()
 
         val location = locLauncher.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts_token)
         location.addOnSuccessListener { locRes ->

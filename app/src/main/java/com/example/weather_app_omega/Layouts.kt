@@ -60,6 +60,7 @@ import com.example.weather_app_omega.ui.theme.LightBlue
 import com.example.weather_app_omega.ui.theme.Weather_app_omegaTheme
 import okhttp3.internal.wait
 import okio.ByteString.Companion.encodeUtf8
+import java.time.LocalTime
 import kotlin.coroutines.coroutineContext
 
 //@Preview(showBackground = true)
@@ -73,7 +74,6 @@ fun TESTmidLayout(currentDay: MutableState<WeatherData>, bgColor: Color) {
             modifier = Modifier
                 .fillMaxWidth(),
             shape = RoundedCornerShape(10.dp)
-//            elevation = 0.dp
         ) {
             Column(
                 modifier = Modifier
@@ -132,7 +132,7 @@ fun TESTmidLayout(currentDay: MutableState<WeatherData>, bgColor: Color) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun topLayout(currentDay: MutableState<WeatherData>, bgColor: Color) {
+fun topLayout(currentDay: MutableState<WeatherData>) {
     TopAppBar(
         title = {
             Row(
@@ -153,17 +153,6 @@ fun topLayout(currentDay: MutableState<WeatherData>, bgColor: Color) {
             }
         }
     )
-//    Row(
-//        modifier = Modifier.padding(16.dp),
-//        horizontalArrangement = Arrangement.SpaceEvenly
-//    ) {
-//
-//        Text(
-//            modifier = Modifier.clickable { /*TODO: dialog window with list of cities*/ },
-//            text = stringResource(id = R.string.change_country),
-//            color = Color.White
-//        )
-//    }
 }
 
 //@Preview(showBackground = true)
@@ -202,6 +191,7 @@ fun ListItem(item: WeatherData, context: Context, bgColor: Color) {
                 contentDescription = "list_temp",
                 modifier = Modifier
                     .fillMaxHeight()
+                    .padding(15.dp)
                     .size(45.dp)
             )
             Row(

@@ -35,51 +35,51 @@ fun PermissionDialog(
     onGoToAppSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            confirmButton = {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Divider()
-                    Text(
-                        text = if (isPermanentlyDeclined) {
-                            stringResource(id = R.string.grant_permission)
-                        } else {
-                            "OK"
-                        },
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                if (isPermanentlyDeclined) {
-                                    onGoToAppSettingsClick()
-                                } else {
-                                    onOkClick()
-                                }
-                            }
-                            .padding(16.dp)
-                    )
-                }
-            },
-            title = {
-                Text(text = stringResource(id = R.string.permission))
-            },
-            text = {
+//    Surface(
+//        modifier = Modifier.fillMaxSize()
+//    ) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Divider()
                 Text(
-                    text = permissionTextProvider.getDescription(
-                        isPermanentlyDeclined = isPermanentlyDeclined,
-                        context = context
-                    )
+                    text = if (isPermanentlyDeclined) {
+                        stringResource(id = R.string.grant_permission)
+                    } else {
+                        "OK"
+                    },
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            if (isPermanentlyDeclined) {
+                                onGoToAppSettingsClick()
+                            } else {
+                                onOkClick()
+                            }
+                        }
+                        .padding(16.dp)
                 )
-            },
-            modifier = modifier
-        )
-    }
+            }
+        },
+        title = {
+            Text(text = stringResource(id = R.string.permission))
+        },
+        text = {
+            Text(
+                text = permissionTextProvider.getDescription(
+                    isPermanentlyDeclined = isPermanentlyDeclined,
+                    context = context
+                )
+            )
+        },
+        modifier = modifier
+    )
+//    }
 }
 
 interface PermissionTextProvider {

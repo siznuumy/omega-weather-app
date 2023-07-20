@@ -23,6 +23,8 @@ import org.json.JSONObject
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -48,8 +50,14 @@ class GetWeatherModel: ViewModel() {
         }
     }
 
-    private fun errorHappen(context: Context) {
-        Toast.makeText(context, context.getString(R.string.smth_wrong), Toast.LENGTH_LONG).show()
+    private fun errorHappen(context: Context, locs: String?) {
+        if (locs != null) {
+            if (locs.length > 1) {
+                Toast.makeText(context, context.getString(R.string.smth_wrong), Toast.LENGTH_LONG).show()
+            } else {
+                return
+            }
+        }
     }
 
     fun checkGPS(context: Context): Boolean {
@@ -114,7 +122,7 @@ class GetWeatherModel: ViewModel() {
                     Log.d("MyLog", "JSON loaded successfully")
                 },
                 {
-                    errorHappen(context)
+                    errorHappen(context, city)
                 }
             )
             queue.add(sRequest)
@@ -126,6 +134,8 @@ class GetWeatherModel: ViewModel() {
         if (response.isEmpty()) return listOf()
         val list = ArrayList<WeatherData>()
         val mainObject = JSONObject(response)
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        val timeUpd = LocalTime.now().format(formatter)
         var city = mainObject.getJSONObject("location").getString("name")
         val days = mainObject.getJSONObject("forecast").getJSONArray("forecastday")
 
@@ -160,7 +170,8 @@ class GetWeatherModel: ViewModel() {
             )
         }
         list[0] = list[0].copy(
-            last_update = mainObject.getJSONObject("location").getString("localtime").toString().substringAfter(" "),
+//            last_update = mainObject.getJSONObject("location").getString("localtime").toString().substringAfter(" "),
+            last_update = timeUpd.toString(),
             temp = mainObject.getJSONObject("current").getDouble("temp_c").toString(),
             date = context.getString(R.string.tomorrow)
         )
