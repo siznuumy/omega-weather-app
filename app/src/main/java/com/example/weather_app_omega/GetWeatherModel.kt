@@ -122,11 +122,11 @@ class GetWeatherModel: ViewModel() {
                     Log.d("MyLog", "JSON loaded successfully")
                 },
                 {
+                    _isLoading.value = false
                     errorHappen(context, city)
                 }
             )
             queue.add(sRequest)
-            _isLoading.value = false
         }
     }
 
@@ -175,6 +175,7 @@ class GetWeatherModel: ViewModel() {
             temp = mainObject.getJSONObject("current").getDouble("temp_c").toString(),
             date = context.getString(R.string.tomorrow)
         )
+        _isLoading.value = false
         return list
     }
 }
